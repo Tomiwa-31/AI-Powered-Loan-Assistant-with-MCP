@@ -1,0 +1,11 @@
+[project]
+name = "claude-ai-powered-elegibility-screener"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "anthropic>=0.109.2",
+    "fastapi>=0.137.1",
+    "pytest>=9.0.3",
+]

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FinScreen — Loan Eligibility Screener</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #1a202c;
+      letter-spacing: -0.5px;
+    }
+
+    header h1 span {
+      color: #3b82f6;
+    }
+
+    header p {
+      color: #64748b;
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 620px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+      margin-top: 20px;
+    }
+
+    label:first-of-type { margin-top: 0; }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #1a202c;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #3b82f6;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    button {
+      margin-top: 24px;
+      width: 100%;
+      padding: 12px;
+      background: #3b82f6;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #2563eb; }
+    button:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .result {
+      margin-top: 28px;
+      display: none;
+    }
+
+    .result-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    .verdict-box {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      font-size: 0.95rem;
+      color: #1e293b;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .verdict-box.eligible {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+
+    .verdict-box.ineligible {
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      border-radius: 8px;
+      padding: 14px 18px;
+      color: #b91c1c;
+      font-size: 0.9rem;
+      margin-top: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Fin<span>Screen</span></h1>
+    <p>AI-Powered Loan Eligibility Screener</p>
+  </header>
+
+  <div class="card">
+    <label for="token">Applicant Access Token</label>
+    <input
+      type="text"
+      id="token"
+      placeholder="access-sandbox-xxxxxxxx-..."
+    />
+
+    <label for="question">Assessment Question</label>
+    <textarea
+      id="question"
+      placeholder="Is this applicant eligible for a ₦500,000 loan?"
+    >Is this applicant eligible for a ₦500,000 loan?</textarea>
+
+    <button id="assessBtn" onclick="runAssessment()">
+      Run Eligibility Assessment
+    </button>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="result" id="result">
+      <div class="result-label">Assessment Verdict</div>
+      <div class="verdict-box" id="verdictBox"></div>
+    </div>
+  </div>
+
+  <script>
+    async function runAssessment() {
+      const token = document.getElementById("token").value.trim();
+      const question = document.getElementById("question").value.trim();
+      const btn = document.getElementById("assessBtn");
+      const resultDiv = document.getElementById("result");
+      const verdictBox = document.getElementById("verdictBox");
+      const errorBox = document.getElementById("errorBox");
+
+      // Reset
+      errorBox.style.display = "none";
+      resultDiv.style.display = "none";
+      verdictBox.className = "verdict-box";
+
+      if (!token) {
+        showError("Please enter the applicant's access token.");
+        return;
+      }
+      if (!question) {
+        showError("Please enter an assessment question.");
+        return;
+      }
+
+      // Loading state
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Assessing...';
+
+      try {
+        const resp = await fetch("/assess", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, access_token: token }),
+        });
+
+        const data = await resp.json();
+
+        if (!data.success) {
+          showError(data.error || "Something went wrong.");
+          return;
+        }
+
+        // Show verdict
+        verdictBox.textContent = data.verdict;
+
+        // Colour code by outcome
+        const upper = data.verdict.toUpperCase();
+        if (upper.includes("ELIGIBLE") && !upper.includes("INELIGIBLE")) {
+          verdictBox.classList.add("eligible");
+        } else if (upper.includes("INELIGIBLE")) {
+          verdictBox.classList.add("ineligible");
+        }
+
+        resultDiv.style.display = "block";
+
+      } catch (err) {
+        showError("Could not reach the FinScreen server. Is it running?");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "Run Eligibility Assessment";
+      }
+    }
+
+    function showError(msg) {
+      const errorBox = document.getElementById("errorBox");
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>

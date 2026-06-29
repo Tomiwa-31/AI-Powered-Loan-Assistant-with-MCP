@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "finscreen": {
+      "command": "python",
+      "args": ["server.py"],
+      "cwd": ".",
+      "env": {
+        "PLAID_CLIENT_ID": "${PLAID_CLIENT_ID}",
+        "PLAID_SECRET": "${PLAID_SECRET}",
+        "PLAID_ENV": "${PLAID_ENV}"
+      }
+    }
+  }
+}

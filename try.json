@@ -1,0 +1,22 @@
+{
+  "preferences": {
+    "coworkHipaaRestricted": false,
+    "coworkWebSearchEnabled": true,
+    "coworkModelAutoFallbackByAccount": {
+      "aaa5730a-fa64-4034-b81f-4a9cdde85157": true
+    },
+    "remoteToolsDeviceName": "desktop-0voe40o",
+    "coworkScheduledTasksEnabled": false,
+    "ccdScheduledTasksEnabled": false,
+    "epitaxyPrefs": {
+      "starred-local-code-sessions": [],
+      "starred-cowork-spaces": [],
+      "starred-session-groups": []
+    },
+    "bypassPermissionsGateByAccount": {
+      "aaa5730a-fa64-4034-b81f-4a9cdde85157": false
+    },
+    "sidebarMode": "chat"
+  },
+  "coworkUserFilesPath": "C:\\Users\\DELL\\Claude"
+}
